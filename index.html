@@ -3,574 +3,688 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mini PC Bundle Calculator</title>
+<title>Kalkulator Harga Jual Marketplace</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --tok: #2e7d32; --tok-light: #e8f5e9; --tok-dark: #1a5e2a;
+  --shp: #e74c3c; --shp-light: #fdedec; --shp-dark: #c0392b;
+  --bg: #f9f9f7; --card: #ffffff; --border: rgba(0,0,0,0.1);
+  --text: #1a1a1a; --muted: #666; --hint: #999;
+  --radius: 12px; --radius-sm: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+@media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a; --border: #2e3352;
-    --accent: #4f7dff; --accent-dim: rgba(79,125,255,0.12); --accent-glow: rgba(79,125,255,0.25);
-    --green: #22d3a0; --green-dim: rgba(34,211,160,0.1);
-    --orange: #ff9f43; --orange-dim: rgba(255,159,67,0.1);
-    --purple: #a78bfa;
-    --text: #e8eaf6; --text-muted: #7b82a8; --text-dim: #4a5080;
-    --radius: 10px; --radius-sm: 6px;
+    --tok: #66bb6a; --tok-light: #1b3a1d; --tok-dark: #a5d6a7;
+    --shp: #ef5350; --shp-light: #3b1212; --shp-dark: #ef9a9a;
+    --bg: #111; --card: #1e1e1e; --border: rgba(255,255,255,0.1);
+    --text: #f0f0f0; --muted: #aaa; --hint: #555;
   }
-  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px 16px 48px; }
-  .header { text-align: center; margin-bottom: 28px; }
-  .header-label { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
-  .header h1 { font-size: clamp(22px, 4vw, 30px); font-weight: 700; letter-spacing: -0.5px; }
-  .header p { color: var(--text-muted); font-size: 13px; margin-top: 6px; }
-  .tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px; max-width: 680px; margin: 0 auto 28px; }
-  .tab-btn { flex: 1; padding: 9px 0; font-size: 12px; font-weight: 600; background: transparent; border: none; border-radius: var(--radius-sm); color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
-  .tab-btn.active { background: var(--accent); color: #fff; }
-  .tab-btn:not(.active):hover { background: var(--surface2); color: var(--text); }
-  .panel { display: none; max-width: 960px; margin: 0 auto; }
-  .panel.active { display: block; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
-  .card-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: inline-block; }
-  .dot-purple { width: 6px; height: 6px; border-radius: 50%; background: var(--purple); display: inline-block; }
-  .field { margin-bottom: 14px; }
-  .field:last-child { margin-bottom: 0; }
-  .field label { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; }
-  .field input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 14px; padding: 10px 12px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
-  .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
-  .field input::placeholder { color: var(--text-dim); }
-  .setting-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  @media (max-width: 480px) { .setting-grid { grid-template-columns: 1fr; } }
-  .setting-item { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
-  .setting-item label { font-size: 12px; color: var(--text-muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .setting-item input { width: 110px; background: transparent; border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 5px 8px; text-align: right; outline: none; transition: border-color 0.2s; flex-shrink: 0; }
-  .setting-item input:focus { border-color: var(--accent); }
-  .save-btn { width: 100%; padding: 12px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; margin-top: 4px; }
-  .save-btn:hover { opacity: 0.88; }
-  .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .save-note { text-align: center; font-size: 11px; color: var(--text-dim); margin-top: 8px; }
-  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--green); color: #0a1a14; font-size: 12px; font-weight: 600; padding: 10px 16px; border-radius: var(--radius-sm); opacity: 0; transform: translateY(10px); transition: all 0.25s; pointer-events: none; z-index: 999; }
-  .toast.show { opacity: 1; transform: translateY(0); }
-  .toast.error { background: #ff6b6b; color: #fff; }
-  .modal-input-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 4px; }
-  .modal-input-row .field { flex: 1; min-width: 180px; margin-bottom: 0; }
-  .result-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
-  .result-header-left { font-size: 12px; color: var(--text-muted); }
-  .result-header-left strong { color: var(--text); font-size: 14px; }
-  .result-header-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .copy-all-btn { padding: 6px 14px; background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-  .copy-all-btn:hover { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
-  .copy-all-btn.toped:hover { background: var(--orange-dim); color: var(--orange); border-color: var(--orange); }
-  /* BUNDLE TABLE */
-  .bundle-section { margin-bottom: 16px; }
-  .bundle-section-title { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; padding: 0 4px; }
-  .bundle-col-header { display: flex; align-items: center; padding: 0 14px 6px; gap: 8px; }
-  .col-name  { flex: 1; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); }
-  .col-sku   { width: 130px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); text-align: center; }
-  .col-price { width: 120px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--green); text-align: right; }
-  .col-toped { width: 120px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--orange); text-align: right; }
-  .bundle-row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
-  .bundle-row:last-child { margin-bottom: 0; }
-  .bundle-name { font-size: 13px; color: var(--text); flex: 1; }
-  /* SKU CELL */
-  .sku-cell { width: 130px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-  .sku-val { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--text-muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-  .sku-val:hover { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
-  /* PRICE CELL */
-  .price-cell { flex-shrink: 0; text-align: right; display: flex; align-items: center; justify-content: flex-end; width: 120px; }
-  .price-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 4px; padding: 3px 6px; transition: all 0.15s; }
-  .price-val.green { color: var(--green); }
-  .price-val.green:hover { background: var(--green-dim); }
-  .price-val.orange { color: var(--orange); }
-  .price-val.orange:hover { background: var(--orange-dim); }
-  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-dim); font-size: 13px; }
-  .empty-state .emoji { font-size: 28px; margin-bottom: 10px; }
-  .filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
-  .chip { padding: 5px 12px; border: 1px solid var(--border); border-radius: 20px; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; background: transparent; transition: all 0.15s; }
-  .chip.active, .chip:hover { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
-  .xbp-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 16px; }
-  .xbp-label { font-size: 13px; color: var(--text); flex: 1; }
-  .xbp-label span { font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px; }
-  .toggle-wrap { display: flex; align-items: center; gap: 8px; }
-  .toggle-wrap .off-label { font-size: 11px; font-weight: 600; color: var(--text-dim); }
-  .toggle-wrap .on-label { font-size: 11px; font-weight: 600; color: var(--orange); }
-  .toggle { position: relative; width: 40px; height: 22px; background: var(--surface2); border: 1px solid var(--border); border-radius: 11px; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
-  .toggle.on { background: var(--orange); border-color: var(--orange); }
-  .toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: left 0.2s; }
-  .toggle.on::after { left: 20px; }
-  .toped-rate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .rate-item { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
-  .rate-item label { font-size: 12px; color: var(--text-muted); flex: 1; }
-  .rate-item input { width: 80px; background: transparent; border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 5px 8px; text-align: right; outline: none; transition: border-color 0.2s; }
-  .rate-item input:focus { border-color: var(--orange); }
-  .rate-unit { font-size: 11px; color: var(--text-dim); }
-  .formula-note { font-size: 11px; color: var(--text-dim); line-height: 1.7; margin-top: 14px; padding: 12px; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); }
-  .formula-note code { color: var(--orange); font-size: 11px; }
-  /* CLOUD */
-  .cloud-status { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; margin-bottom: 16px; }
-  .cloud-status.connected { background: var(--green-dim); border: 1px solid var(--green); color: var(--green); }
-  .cloud-status.disconnected { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); }
-  .cloud-btn-row { display: flex; gap: 10px; margin-top: 12px; }
-  .cloud-btn { flex: 1; padding: 11px; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
-  .cloud-btn:hover { opacity: 0.85; }
-  .cloud-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .cloud-btn.upload { background: var(--purple); color: #fff; }
-  .cloud-btn.download { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-  .token-input-wrap { position: relative; }
-  .token-input-wrap input { padding-right: 60px; }
-  .token-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--text-dim); cursor: pointer; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; }
-  .token-toggle:hover { color: var(--text); }
-  .cloud-info { font-size: 11px; color: var(--text-dim); line-height: 1.7; margin-top: 12px; padding: 12px; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); }
-  .cloud-info a { color: var(--accent); text-decoration: none; }
-  .cloud-info a:hover { text-decoration: underline; }
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; padding: 1.25rem 1rem 3rem;
+}
+.container { max-width: 700px; margin: 0 auto; }
+
+h1 { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.2rem; }
+.subtitle { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.25rem; }
+
+/* Top nav tabs */
+.nav-tabs {
+  display: flex; gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.25rem;
+}
+.nav-tab {
+  padding: 8px 16px; border: none; background: transparent;
+  cursor: pointer; font-size: 0.875rem; color: var(--muted);
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all 0.15s; font-weight: 500;
+}
+.nav-tab.active { color: var(--text); border-bottom-color: var(--text); }
+
+/* Cards */
+.card {
+  background: var(--card); border-radius: var(--radius);
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+  padding: 1.25rem; margin-bottom: 1rem;
+}
+
+/* Mode toggle */
+.toggle-row {
+  display: flex; background: var(--bg); border-radius: var(--radius-sm);
+  padding: 3px; gap: 3px; margin-bottom: 1.25rem;
+}
+.tog {
+  flex: 1; padding: 8px; border: none; border-radius: 6px;
+  background: transparent; cursor: pointer; font-size: 0.875rem;
+  color: var(--muted); font-weight: 500; transition: all 0.15s;
+}
+.tog.active { background: var(--card); color: var(--text); box-shadow: var(--shadow); }
+
+/* Input */
+.input-group { margin-bottom: 1rem; }
+.input-label { font-size: 0.8rem; color: var(--muted); margin-bottom: 5px; display: block; }
+.input-wrap {
+  display: flex; align-items: center;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--card); overflow: hidden; transition: border-color 0.15s;
+}
+.input-wrap:focus-within { border-color: #888; }
+.prefix {
+  padding: 0 10px; font-size: 0.875rem; color: var(--muted);
+  background: var(--bg); height: 44px; display: flex; align-items: center;
+  border-right: 1px solid var(--border);
+}
+input[type=number] {
+  flex: 1; border: none; outline: none; padding: 0 12px;
+  font-size: 1.1rem; font-weight: 500; background: transparent;
+  color: var(--text); height: 44px; width: 100%;
+}
+input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+/* Slider */
+.slider-row { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; }
+.slider-row label { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+input[type=range] { flex: 1; accent-color: var(--tok); cursor: pointer; }
+.slider-val { font-size: 0.875rem; font-weight: 600; min-width: 38px; text-align: right; color: var(--tok); }
+
+/* Option buttons */
+.opts-group { margin-bottom: 1rem; }
+.opts-label { font-size: 0.8rem; color: var(--muted); margin-bottom: 6px; }
+.opts-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.opt-btn {
+  padding: 5px 12px; border: 1px solid var(--border); border-radius: 20px;
+  background: transparent; cursor: pointer; font-size: 0.8rem;
+  color: var(--muted); transition: all 0.15s;
+}
+.opt-btn.on { background: #e8f5e9; border-color: #a5d6a7; color: #2e7d32; font-weight: 500; }
+@media (prefers-color-scheme: dark) {
+  .opt-btn.on { background: #1b3a1d; border-color: #388e3c; color: #81c784; }
+}
+
+/* Results */
+.results { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 1rem; }
+@media (max-width: 500px) { .results { grid-template-columns: 1fr; } }
+
+.platform-card { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.pcard-header { padding: 10px 14px; font-size: 0.8rem; font-weight: 600; }
+.pcard-header.tok { background: var(--tok-light); color: var(--tok-dark); }
+.pcard-header.shp { background: var(--shp-light); color: var(--shp-dark); }
+
+.net-section {
+  padding: 12px 14px; border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.net-label { font-size: 0.75rem; color: var(--muted); }
+.net-val { font-size: 1.25rem; font-weight: 600; }
+.net-val.tok { color: var(--tok); }
+.net-val.shp { color: var(--shp); }
+
+.detail-list { padding: 8px 14px 10px; }
+.detail-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 3px 0; font-size: 0.8rem; border-bottom: 1px solid var(--border);
+}
+.detail-item:last-child { border-bottom: none; }
+.dk { color: var(--muted); }
+.dv { font-weight: 500; font-size: 0.75rem; }
+.detail-item.total .dk { color: var(--text); font-weight: 500; }
+.detail-item.total .dv { color: var(--shp); }
+.detail-item.sub .dk { color: var(--hint); padding-left: 10px; font-size: 0.75rem; }
+
+.hj-box {
+  margin: 0 14px 12px; padding: 8px 10px; background: var(--bg);
+  border-radius: var(--radius-sm); display: flex; justify-content: space-between;
+  align-items: center; border: 1px solid var(--border);
+}
+.hj-label { font-size: 0.75rem; color: var(--muted); }
+.hj-val { font-size: 0.95rem; font-weight: 600; }
+.hj-val.tok { color: var(--tok); }
+.hj-val.shp { color: var(--shp); }
+
+.empty {
+  grid-column: 1/-1; text-align: center; padding: 2.5rem 1rem;
+  color: var(--hint); font-size: 0.875rem;
+}
+
+.divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+
+/* Setting rows */
+.setting-group { margin-bottom: 1.25rem; }
+.setting-group-label {
+  font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.75rem;
+}
+.setting-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0; border-bottom: 1px solid var(--border); gap: 12px;
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-label { font-size: 0.875rem; flex: 1; }
+.setting-desc { font-size: 0.75rem; color: var(--muted); }
+.setting-input-wrap { display: flex; align-items: center; gap: 4px; }
+.setting-input {
+  width: 80px; text-align: right; border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 8px; font-size: 0.875rem; font-weight: 500;
+  background: var(--card); color: var(--text); outline: none;
+}
+.setting-input:focus { border-color: #888; }
+.setting-unit { font-size: 0.8rem; color: var(--muted); min-width: 20px; }
+.setting-note {
+  font-size: 0.75rem; color: #e65c00; background: #fff3e0;
+  padding: 8px 10px; border-radius: 6px; margin-top: 8px; line-height: 1.5;
+}
+@media (prefers-color-scheme: dark) {
+  .setting-note { background: #2d1a00; color: #ffb74d; }
+}
+
+.reset-btn {
+  padding: 6px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: transparent; cursor: pointer; font-size: 0.8rem; color: var(--muted);
+  margin-top: 0.5rem; transition: all 0.15s;
+}
+.reset-btn:hover { border-color: #888; color: var(--text); }
+
+.footer {
+  text-align: center; font-size: 0.75rem; color: var(--hint);
+  margin-top: 2rem; line-height: 1.7;
+}
+
+/* Tab panels */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
 </style>
 </head>
 <body>
+<div class="container">
+  <h1>Kalkulator Harga Jual</h1>
+  <p class="subtitle">Tokopedia &amp; Shopee — update otomatis saat mengetik</p>
 
-<div class="header">
-  <div class="header-label">Pricing Tool</div>
-  <h1>Mini PC Bundle Calculator</h1>
-  <p>Hitung harga jual bundling RAM + SSD otomatis dari harga modal</p>
-</div>
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('kalkulator')">Kalkulator</button>
+    <button class="nav-tab" onclick="switchTab('setting')">⚙️ Setting</button>
+  </nav>
 
-<div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('calc', this)">🖩 Kalkulator</button>
-  <button class="tab-btn" onclick="switchTab('settings', this)">⚙️ Harga Part</button>
-  <button class="tab-btn" onclick="switchTab('toped', this)">🛍️ Tokopedia</button>
-  <button class="tab-btn" onclick="switchTab('cloud', this)">☁️ Cloud Sync</button>
-</div>
+  <!-- KALKULATOR TAB -->
+  <div class="tab-panel active" id="tab-kalkulator">
+    <div class="card">
+      <div class="toggle-row">
+        <button class="tog active" id="btn-modal" onclick="setMode('modal')">Dari modal</button>
+        <button class="tog" id="btn-jual" onclick="setMode('jual')">Dari harga jual</button>
+      </div>
 
-<!-- TAB KALKULATOR -->
-<div class="panel active" id="panel-calc">
-  <div class="card">
-    <div class="card-title"><span class="dot"></span> Input Harga Modal</div>
-    <div class="modal-input-row">
-      <div class="field">
-        <label>Harga Mini PC (Rp)</label>
-        <input type="number" id="modal-pc" placeholder="Contoh: 1500000" oninput="calcAll()" />
+      <div id="grp-modal">
+        <div class="input-group">
+          <label class="input-label">Modal / HPP</label>
+          <div class="input-wrap">
+            <span class="prefix">Rp</span>
+            <input type="number" id="modal" placeholder="5000000" oninput="calc()" />
+          </div>
+        </div>
+        <div class="slider-row">
+          <label>Target untung</label>
+          <input type="range" min="0" max="50" step="1" value="10" id="target"
+            oninput="document.getElementById('tval').textContent=this.value+'%'; calc()">
+          <span class="slider-val" id="tval">10%</span>
+        </div>
+      </div>
+
+      <div id="grp-jual" style="display:none">
+        <div class="input-group">
+          <label class="input-label">Harga jual yang kamu set</label>
+          <div class="input-wrap">
+            <span class="prefix">Rp</span>
+            <input type="number" id="hj-input" placeholder="7000000" oninput="calc()" />
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="opts-group">
+        <p class="opts-label">Opsi Tokopedia</p>
+        <div class="opts-row">
+          <button class="opt-btn" id="opt-xbp" onclick="toggle('opt-xbp');calc()">Ikut XBP (Growth Xtra)</button>
+          <button class="opt-btn" id="opt-afiliasi" onclick="toggle('opt-afiliasi');calc()">Komisi Afiliasi</button>
+        </div>
+      </div>
+
+      <div id="grp-afiliasi" style="display:none;margin-bottom:1rem">
+        <label class="input-label">Rate Komisi Afiliasi</label>
+        <div class="input-wrap"><input type="number" id="afiliasi-rate" value="1.5" step="0.1" min="0" max="20" oninput="calc()" /><span class="prefix" style="border-left:1px solid var(--border);border-right:none">%</span></div>
+      </div>
+      <div class="opts-group" style="margin-bottom:0">
+        <p class="opts-label">Opsi Shopee</p>
+        <div class="opts-row">
+          <button class="opt-btn on" id="opt-mall" onclick="toggle('opt-mall');calc()">Shopee Mall</button>
+          <button class="opt-btn on" id="opt-xtra" onclick="toggle('opt-xtra');calc()">Promo XTRA</button>
+          <button class="opt-btn on" id="opt-go" onclick="toggle('opt-go');calc()">GO XTRA</button>
+          <button class="opt-btn" id="opt-asuransi" onclick="toggle('opt-asuransi');calc()">Asuransi</button>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="xbp-row">
-    <div class="xbp-label">
-      Growth Xtra Program (XBP)
-      <span>Cashback 2.5% × HJ aktif jika ON</span>
-    </div>
-    <div class="toggle-wrap">
-      <span class="off-label">OFF</span>
-      <div class="toggle" id="xbp-toggle" onclick="toggleXBP()"></div>
-      <span class="on-label">ON</span>
-    </div>
-  </div>
-  <div class="filter-row">
-    <button class="chip active" onclick="setFilter('all', this)">Semua</button>
-    <button class="chip" onclick="setFilter('ddr4', this)">DDR4</button>
-    <button class="chip" onclick="setFilter('ddr5', this)">DDR5</button>
-    <button class="chip" onclick="setFilter('256', this)">SSD 256GB</button>
-    <button class="chip" onclick="setFilter('512', this)">SSD 512GB</button>
-    <button class="chip" onclick="setFilter('1tb', this)">SSD 1TB</button>
-    <button class="chip" onclick="setFilter('2tb', this)">SSD 2TB</button>
-  </div>
-  <div id="result-area">
-    <div class="empty-state">
-      <div class="emoji">💡</div>
-      <div>Masukkan harga Mini PC untuk melihat harga bundling</div>
-    </div>
-  </div>
-</div>
 
-<!-- TAB SETTINGS -->
-<div class="panel" id="panel-settings">
-  <div class="card">
-    <div class="card-title"><span class="dot"></span> Harga Modal Komponen</div>
-    <div class="setting-grid">
-      <div class="setting-item"><label>Windows 11</label><input type="number" id="s-win" placeholder="0" /></div>
-      <div class="setting-item"><label>RAM 8GB DDR4</label><input type="number" id="s-r8d4" placeholder="0" /></div>
-      <div class="setting-item"><label>RAM 16GB DDR4</label><input type="number" id="s-r16d4" placeholder="0" /></div>
-      <div class="setting-item"><label>RAM 32GB DDR4</label><input type="number" id="s-r32d4" placeholder="0" /></div>
-      <div class="setting-item"><label>RAM 64GB DDR4</label><input type="number" id="s-r64d4" placeholder="0" /></div>
-      <div class="setting-item"><label>RAM 8GB DDR5</label><input type="number" id="s-r8d5" placeholder="0" /></div>
-      <div class="setting-item"><label>RAM 16GB DDR5</label><input type="number" id="s-r16d5" placeholder="0" /></div>
-      <div class="setting-item"><label>RAM 32GB DDR5</label><input type="number" id="s-r32d5" placeholder="0" /></div>
-      <div class="setting-item"><label>RAM 64GB DDR5</label><input type="number" id="s-r64d5" placeholder="0" /></div>
-      <div class="setting-item"><label>SSD 256GB</label><input type="number" id="s-ssd256" placeholder="0" /></div>
-      <div class="setting-item"><label>SSD 512GB</label><input type="number" id="s-ssd512" placeholder="0" /></div>
-      <div class="setting-item"><label>SSD 1TB</label><input type="number" id="s-ssd1tb" placeholder="0" /></div>
-      <div class="setting-item"><label>SSD 2TB</label><input type="number" id="s-ssd2tb" placeholder="0" /></div>
+    <div class="results" id="results">
+      <div class="empty">Masukkan angka untuk melihat hasil</div>
     </div>
   </div>
-  <div class="card">
-    <div class="card-title"><span class="dot"></span> Biaya Tambahan (Opsional)</div>
-    <div class="setting-grid">
-      <div class="setting-item"><label>Ongkos Pasang</label><input type="number" id="s-ongkos" placeholder="0" /></div>
-      <div class="setting-item"><label>Biaya Lain-lain</label><input type="number" id="s-misc" placeholder="0" /></div>
-    </div>
-  </div>
-  <button class="save-btn" onclick="saveSettings()">💾 Simpan ke Browser</button>
-  <p class="save-note">Simpan lokal dulu, lalu upload ke cloud di tab ☁️ Cloud Sync</p>
-</div>
 
-<!-- TAB TOKOPEDIA -->
-<div class="panel" id="panel-toped">
-  <div class="card">
-    <div class="card-title"><span class="dot"></span> Struktur Biaya Tokopedia / TikTok Shop</div>
-    <div class="toped-rate-grid">
-      <div class="rate-item"><label>Komisi Platform</label><input type="number" step="0.1" id="t-komisi" value="3" /><span class="rate-unit">%</span></div>
-      <div class="rate-item"><label>Biaya Layanan Mall</label><input type="number" id="t-mall" value="50000" /><span class="rate-unit">Rp flat</span></div>
-      <div class="rate-item"><label>Komisi Dinamis (max)</label><input type="number" id="t-dinamis-cap" value="650000" /><span class="rate-unit">Rp cap</span></div>
-      <div class="rate-item"><label>Komisi Dinamis</label><input type="number" step="0.1" id="t-dinamis-pct" value="4" /><span class="rate-unit">%</span></div>
-      <div class="rate-item"><label>Cashback XBP (jika ON)</label><input type="number" step="0.1" id="t-xbp" value="2.5" /><span class="rate-unit">%</span></div>
-      <div class="rate-item"><label>Biaya Proses</label><input type="number" id="t-proses" value="1250" /><span class="rate-unit">Rp flat</span></div>
-    </div>
-    <div class="formula-note">
-      <strong style="color:var(--text);">Formula HJ:</strong> <code>CEIL((Modal + flat) / (1 - total_rate))</code><br>
-      — Komisi Dinamis = <code>MIN(4% × HJ, Rp650.000)</code><br>
-      — Hasil dibulatkan ke angka berakhiran <code>x.xx9.000</code>
-    </div>
-  </div>
-  <button class="save-btn" onclick="saveTokedSettings()" style="background:var(--orange);">💾 Simpan ke Browser</button>
-  <p class="save-note">Simpan lokal dulu, lalu upload ke cloud di tab ☁️ Cloud Sync</p>
-</div>
+  <!-- SETTING TAB -->
+  <div class="tab-panel" id="tab-setting">
+    <div class="card">
+      <div class="setting-group">
+        <p class="setting-group-label">🛍️ Tokopedia / TikTok Shop</p>
 
-<!-- TAB CLOUD -->
-<div class="panel" id="panel-cloud">
-  <div class="card">
-    <div class="card-title"><span class="dot-purple"></span> GitHub Gist — Cloud Sync</div>
-    <div id="cloud-status" class="cloud-status disconnected">⚪ Belum terhubung</div>
-    <div class="field">
-      <label>GitHub Personal Access Token</label>
-      <div class="token-input-wrap">
-        <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx" oninput="onTokenInput()" />
-        <span class="token-toggle" onclick="toggleTokenVis()">👁 show</span>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Komisi Platform</div>
+            <div class="setting-desc">Dikenakan selalu</div>
+          </div>
+          <div class="setting-input-wrap">
+            <input type="number" class="setting-input" id="s-tok-komisi" value="3" step="0.01" min="0" max="20" oninput="calc()">
+            <span class="setting-unit">%</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Biaya Layanan Mall</div>
+            <div class="setting-desc">Flat per transaksi</div>
+          </div>
+          <div class="setting-input-wrap">
+            <span class="setting-unit">Rp</span>
+            <input type="number" class="setting-input" id="s-tok-mall" value="50000" step="1000" min="0" oninput="calc()">
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Komisi Dinamis</div>
+            <div class="setting-desc">% dari HJ</div>
+          </div>
+          <div class="setting-input-wrap">
+            <input type="number" class="setting-input" id="s-tok-dinamis" value="4" step="0.01" min="0" max="20" oninput="calc()">
+            <span class="setting-unit">%</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Cap Komisi Dinamis</div>
+            <div class="setting-desc">Maksimal (0 = tanpa cap)</div>
+          </div>
+          <div class="setting-input-wrap">
+            <span class="setting-unit">Rp</span>
+            <input type="number" class="setting-input" id="s-tok-dinamis-cap" value="650000" step="1000" min="0" oninput="calc()">
+          </div>
+        </div>
+
+        <div class="setting-row" id="xbp-settings" style="display:none">
+          <div>
+            <div class="setting-label">Cashback Growth Xtra</div>
+            <div class="setting-desc">% dari HJ (jika XBP aktif)</div>
+          </div>
+          <div class="setting-input-wrap">
+            <input type="number" class="setting-input" id="s-tok-cashback" value="2.5" step="0.01" min="0" max="20" oninput="calc()">
+            <span class="setting-unit">%</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Biaya Proses Pesanan</div>
+            <div class="setting-desc">Flat per transaksi</div>
+          </div>
+          <div class="setting-input-wrap">
+            <span class="setting-unit">Rp</span>
+            <input type="number" class="setting-input" id="s-tok-proses" value="1250" step="250" min="0" oninput="calc()">
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="cloud-btn-row">
-      <button class="cloud-btn upload" id="btn-upload" onclick="cloudUpload()" disabled>⬆️ Upload ke Cloud</button>
-      <button class="cloud-btn download" id="btn-download" onclick="cloudDownload()" disabled>⬇️ Download dari Cloud</button>
-    </div>
-    <div class="cloud-info">
-      <strong style="color:var(--text);">Cara setup (sekali aja):</strong><br>
-      1. Buka <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a><br>
-      2. Note: <code style="color:var(--accent);">minipc-calculator</code> · Expiration: <code style="color:var(--accent);">No expiration</code><br>
-      3. Centang <strong>gist</strong> → Generate token<br>
-      4. Paste token di kolom atas → klik Upload<br><br>
-      Token tersimpan di browser ini. Di browser/device lain, paste token yang sama lalu klik Download.
+
+      <hr class="divider">
+
+      <div class="setting-group">
+        <p class="setting-group-label">🛒 Shopee</p>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Admin — Shopee Mall</div>
+            <div class="setting-desc">% dari HJ (jika Mall aktif)</div>
+          </div>
+          <div class="setting-input-wrap">
+            <input type="number" class="setting-input" id="s-shp-admin-mall" value="4.2" step="0.01" min="0" max="20" oninput="calc()">
+            <span class="setting-unit">%</span>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Admin — Non Mall</div>
+            <div class="setting-desc">% dari HJ (jika Mall tidak aktif)</div>
+          </div>
+          <div class="setting-input-wrap">
+            <input type="number" class="setting-input" id="s-shp-admin-nonmall" value="5.25" step="0.01" min="0" max="20" oninput="calc()">
+            <span class="setting-unit">%</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Biaya Pembayaran</div>
+            <div class="setting-desc">% dari HJ, cap Rp50.000</div>
+          </div>
+          <div class="setting-input-wrap">
+            <input type="number" class="setting-input" id="s-shp-bayar" value="1.8" step="0.01" min="0" max="20" oninput="calc()">
+            <span class="setting-unit">%</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Biaya Layanan (max rate)</div>
+            <div class="setting-desc">Max % untuk Biaya Layanan</div>
+          </div>
+          <div class="setting-input-wrap">
+            <input type="number" class="setting-input" id="s-shp-layanan" value="2" step="0.01" min="0" max="20" oninput="calc()">
+            <span class="setting-unit">%</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Biaya Promo XTRA</div>
+            <div class="setting-desc">Flat jika aktif</div>
+          </div>
+          <div class="setting-input-wrap">
+            <span class="setting-unit">Rp</span>
+            <input type="number" class="setting-input" id="s-shp-xtra" value="60000" step="1000" min="0" oninput="calc()">
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Biaya GO XTRA</div>
+            <div class="setting-desc">Flat per transaksi (cap)</div>
+          </div>
+          <div class="setting-input-wrap">
+            <span class="setting-unit">Rp</span>
+            <input type="number" class="setting-input" id="s-shp-go" value="60000" step="1000" min="0" oninput="calc()">
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Premi Asuransi</div>
+            <div class="setting-desc">% dari HJ jika diasuransikan</div>
+          </div>
+          <div class="setting-input-wrap">
+            <input type="number" class="setting-input" id="s-shp-premi" value="0.5" step="0.01" min="0" max="20" oninput="calc()">
+            <span class="setting-unit">%</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Biaya Proses Pesanan</div>
+            <div class="setting-desc">Flat per transaksi</div>
+          </div>
+          <div class="setting-input-wrap">
+            <span class="setting-unit">Rp</span>
+            <input type="number" class="setting-input" id="s-shp-proses" value="1250" step="250" min="0" oninput="calc()">
+          </div>
+        </div>
+      </div>
+
+      <div class="setting-note">
+        ⚠️ Ubah setting hanya jika Tokopedia/Shopee mengumumkan perubahan biaya resmi.
+        Nilai default sudah sesuai transaksi aktual yang terverifikasi.
+      </div>
+
+      <button class="reset-btn" onclick="resetSettings()">↺ Reset ke default</button>
     </div>
   </div>
-</div>
 
-<div class="toast" id="toast"></div>
+  <p class="footer" id="footer-text">
+    Terverifikasi dari transaksi aktual.<br>
+    Tokopedia: Komisi 3% + Dinamis min(4%, Rp650rb) + Mall Rp50rb + Proses Rp1.250<br>
+    Shopee: Admin 4.2% (Mall) / 5.25% (Non-Mall) + Layanan (PromoXTRA Rp60rb + GO XTRA Rp60rb flat) + Proses Rp1.250<br><br>
+    Created by <strong>Bahrul</strong>
+  </p>
+</div>
 
 <script>
-const ITEMS = {
-  ram: [
-    { label: 'RAM 8GB DDR4',  key: 's-r8d4',  tag: 'ddr4', sku: '8GB' },
-    { label: 'RAM 16GB DDR4', key: 's-r16d4', tag: 'ddr4', sku: '16GB' },
-    { label: 'RAM 32GB DDR4', key: 's-r32d4', tag: 'ddr4', sku: '32GB' },
-    { label: 'RAM 64GB DDR4', key: 's-r64d4', tag: 'ddr4', sku: '64GB' },
-    { label: 'RAM 8GB DDR5',  key: 's-r8d5',  tag: 'ddr5', sku: '8GB' },
-    { label: 'RAM 16GB DDR5', key: 's-r16d5', tag: 'ddr5', sku: '16GB' },
-    { label: 'RAM 32GB DDR5', key: 's-r32d5', tag: 'ddr5', sku: '32GB' },
-    { label: 'RAM 64GB DDR5', key: 's-r64d5', tag: 'ddr5', sku: '64GB' },
-  ],
-  ssd: [
-    { label: 'SSD 256GB', key: 's-ssd256', tag: '256', sku: '256GB' },
-    { label: 'SSD 512GB', key: 's-ssd512', tag: '512', sku: '512GB' },
-    { label: 'SSD 1TB',   key: 's-ssd1tb', tag: '1tb', sku: '1TB' },
-    { label: 'SSD 2TB',   key: 's-ssd2tb', tag: '2tb', sku: '2TB' },
-  ]
-};
+let mode = 'modal';
 
-const PART_IDS  = ['s-win','s-r8d4','s-r16d4','s-r32d4','s-r64d4','s-r8d5','s-r16d5','s-r32d5','s-r64d5','s-ssd256','s-ssd512','s-ssd1tb','s-ssd2tb','s-ongkos','s-misc'];
-const TOPED_IDS = ['t-komisi','t-mall','t-dinamis-cap','t-dinamis-pct','t-xbp','t-proses'];
-
-let activeFilter = 'all';
-let xbpOn = false;
-
-function switchTab(tab, btn) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-' + tab).classList.add('active');
-  btn.classList.add('active');
-  if (tab === 'cloud') updateCloudStatus();
+// ── Helpers ───────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.target.classList.add('active');
 }
 
-function toggleXBP() {
-  xbpOn = !xbpOn;
-  document.getElementById('xbp-toggle').classList.toggle('on', xbpOn);
-  calcAll();
+function setMode(m) {
+  mode = m;
+  document.getElementById('btn-modal').classList.toggle('active', m === 'modal');
+  document.getElementById('btn-jual').classList.toggle('active', m === 'jual');
+  document.getElementById('grp-modal').style.display = m === 'modal' ? '' : 'none';
+  document.getElementById('grp-jual').style.display  = m === 'jual'  ? '' : 'none';
+  calc();
 }
 
-function setFilter(f, el) {
-  activeFilter = f;
-  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  calcAll();
-}
-
-function fmt(n) { return 'Rp ' + Math.round(n).toLocaleString('id-ID'); }
-function getVal(id) { const el = document.getElementById(id); return el ? (parseFloat(el.value) || 0) : 0; }
-
-function endIn9000(n) {
-  const base = Math.floor(n / 10000) * 10000;
-  const c = base + 9000;
-  return c >= n ? c : c + 10000;
-}
-
-function tokedPrice(modal) {
-  const komisiPct  = getVal('t-komisi') / 100;
-  const mallFlat   = getVal('t-mall');
-  const dinamisPct = getVal('t-dinamis-pct') / 100;
-  const dinamisCap = getVal('t-dinamis-cap');
-  const xbpPct     = xbpOn ? getVal('t-xbp') / 100 : 0;
-  const prosesFlat = getVal('t-proses');
-  const flatTotal  = mallFlat + prosesFlat;
-  let hj = Math.ceil((modal + flatTotal) / (1 - komisiPct - dinamisPct - xbpPct));
-  for (let i = 0; i < 10; i++) {
-    const dinamis = Math.min(dinamisPct * hj, dinamisCap);
-    const rate    = komisiPct + (dinamis / hj) + xbpPct;
-    const newHj   = Math.ceil((modal + flatTotal) / (1 - rate));
-    if (newHj === hj) break;
-    hj = newHj;
+function toggle(id) {
+  document.getElementById(id).classList.toggle('on');
+  if (id === 'opt-xbp') {
+    document.getElementById('xbp-settings').style.display =
+      on('opt-xbp') ? 'flex' : 'none';
   }
-  return endIn9000(hj);
-}
-
-function saveSettings() {
-  const data = {};
-  PART_IDS.forEach(id => { data[id] = getVal(id); });
-  localStorage.setItem('minipc_settings', JSON.stringify(data));
-  showToast('✅ Harga part tersimpan!');
-  calcAll();
-}
-
-function saveTokedSettings() {
-  const data = {};
-  TOPED_IDS.forEach(id => { data[id] = getVal(id); });
-  localStorage.setItem('minipc_toped', JSON.stringify(data));
-  showToast('✅ Pengaturan Tokopedia tersimpan!');
-  calcAll();
-}
-
-function loadSettings() {
-  const raw = localStorage.getItem('minipc_settings');
-  if (raw) { const d = JSON.parse(raw); PART_IDS.forEach(id => { const el = document.getElementById(id); if (el && d[id] !== undefined) el.value = d[id] || ''; }); }
-  const rawT = localStorage.getItem('minipc_toped');
-  if (rawT) { const d = JSON.parse(rawT); TOPED_IDS.forEach(id => { const el = document.getElementById(id); if (el && d[id] !== undefined) el.value = d[id]; }); }
-  const tok = localStorage.getItem('gh_token');
-  if (tok) document.getElementById('gh-token').value = tok;
-}
-
-function calcAll() {
-  const modalPC = getVal('modal-pc');
-  const winCost = getVal('s-win');
-  const ongkos  = getVal('s-ongkos');
-  const misc    = getVal('s-misc');
-
-  if (!modalPC) {
-    document.getElementById('result-area').innerHTML = `<div class="empty-state"><div class="emoji">💡</div><div>Masukkan harga Mini PC untuk melihat harga bundling</div></div>`;
-    return;
+  if (id === 'opt-afiliasi') {
+    document.getElementById('grp-afiliasi').style.display =
+      on('opt-afiliasi') ? '' : 'none';
   }
+  calc();
+}
 
-  const bundleModal = (r, s) => modalPC + winCost + r + s + ongkos + misc;
-  const shouldShow  = (rt, st) => activeFilter === 'all' ? true : ['ddr4','ddr5'].includes(activeFilter) ? rt === activeFilter : st === activeFilter;
+function on(id) { return document.getElementById(id).classList.contains('on'); }
 
-  let sections = [];
-  if (['ddr4','ddr5','all'].includes(activeFilter)) {
-    ITEMS.ssd.forEach(ssd => {
-      const sc = getVal(ssd.key);
-      const rows = ITEMS.ram.filter(r => shouldShow(r.tag, ssd.tag)).map(ram => {
-        const m = bundleModal(getVal(ram.key), sc);
-        return {
-          label: `Mini PC + Win11 + ${ram.label} + ${ssd.label}`,
-          sku: `${ram.sku}/${ssd.sku} NVMe`,
-          price: m,
-          toped: tokedPrice(m)
-        };
-      });
-      if (rows.length) sections.push({ title: ssd.label, rows });
-    });
-  } else {
-    const ts = ITEMS.ssd.find(s => s.tag === activeFilter);
-    if (ts) {
-      const sc = getVal(ts.key);
-      sections.push({ title: ts.label, rows: ITEMS.ram.map(ram => {
-        const m = bundleModal(getVal(ram.key), sc);
-        return {
-          label: `Mini PC + Win11 + ${ram.label} + ${ts.label}`,
-          sku: `${ram.sku}/${ts.sku} NVMe`,
-          price: m,
-          toped: tokedPrice(m)
-        };
-      })});
+function val(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+function rp(n) { return 'Rp' + Math.round(n).toLocaleString('id-ID'); }
+
+// ── Settings getters ──────────────────────────────────────
+function S() {
+  return {
+    tok: {
+      komisi:      val('s-tok-komisi') / 100,
+      mall:        val('s-tok-mall'),
+      dinamis:     val('s-tok-dinamis') / 100,
+      dinamisCap:  val('s-tok-dinamis-cap'),
+      cashback:    val('s-tok-cashback') / 100,
+      proses:      val('s-tok-proses'),
+    },
+    shp: {
+      admin:   (on('opt-mall') ? val('s-shp-admin-mall') : val('s-shp-admin-nonmall')) / 100,
+      bayar:   val('s-shp-bayar') / 100,
+      layanan: val('s-shp-layanan') / 100,
+      xtra:    val('s-shp-xtra'),
+      go:      val('s-shp-go'),
+      premi:   val('s-shp-premi') / 100,
+      proses:  val('s-shp-proses'),
     }
+  };
+}
+
+function resetSettings() {
+  const defaults = {
+    'tok-komisi':'3','tok-mall':'50000','tok-dinamis':'4',
+    'tok-dinamis-cap':'650000','tok-cashback':'2.5','tok-proses':'1250',
+    'shp-admin-mall':'4.2','shp-admin-nonmall':'5.25','shp-bayar':'1.8','shp-layanan':'2',
+    'shp-xtra':'60000','shp-go':'60000','shp-premi':'0.5','shp-proses':'1250'
+  };
+  Object.entries(defaults).forEach(([k,v]) => {
+    const el = document.getElementById('s-' + k);
+    if (el) el.value = v;
+  });
+  calc();
+}
+
+// ── Tokopedia ─────────────────────────────────────────────
+function calcTokFromHJ(hj) {
+  const s = S().tok;
+  const xbp = on('opt-xbp');
+  const komisi   = Math.round(hj * s.komisi);
+  const mall     = s.mall;
+  const dinamis  = s.dinamisCap > 0
+    ? Math.min(Math.round(hj * s.dinamis), s.dinamisCap)
+    : Math.round(hj * s.dinamis);
+  const cashback  = xbp ? Math.round(hj * s.cashback) : 0;
+  const afl_on    = on('opt-afiliasi');
+  const afl_rate  = afl_on ? (parseFloat(document.getElementById('afiliasi-rate').value)||0)/100 : 0;
+  const afiliasi  = afl_on ? Math.round(hj * afl_rate) : 0;
+  const proses    = s.proses;
+  const total     = komisi + mall + dinamis + cashback + afiliasi + proses;
+  return { hj, komisi, mall, dinamis, cashback, afiliasi, proses, total, net: hj - total, xbp, afl_on };
+}
+
+function calcTok(modal, pct) {
+  const s = S().tok;
+  const xbp = on('opt-xbp');
+  const target = modal * (1 + pct / 100);
+  const cb = xbp ? s.cashback : 0;
+  const cap = s.dinamisCap;
+
+  // Case A: dinamis not capped
+  const afl = on('opt-afiliasi') ? (parseFloat(document.getElementById('afiliasi-rate').value)||0)/100 : 0;
+  const denom_A = 1 - s.komisi - s.dinamis - cb - afl;
+  const hjA = Math.ceil((target + s.mall + s.proses) / denom_A);
+  // Case B: dinamis capped
+  const denom_B = 1 - s.komisi - cb - afl;
+  const hjB = Math.ceil((target + s.mall + cap + s.proses) / denom_B);
+  // Threshold
+  const thresh = cap > 0 ? cap / s.dinamis : Infinity;
+  return calcTokFromHJ(hjA < thresh ? hjA : hjB);
+}
+
+// ── Shopee ────────────────────────────────────────────────
+function calcShpFromHJ(hj) {
+  const s = S().shp;
+  const xtra     = on('opt-xtra');
+  const go       = on('opt-go');
+  const asuransi = on('opt-asuransi');
+
+  const admin   = hj * s.admin;
+  const bayar   = 50000;                // flat Rp50.000
+  const promoX  = xtra ? s.xtra : 0;   // flat 60000
+  const goX     = go   ? s.go   : 0;   // flat 60000
+  const layanan = Math.min(promoX + goX, hj * s.layanan);
+  const premi   = asuransi ? hj * s.premi : 0;
+  const proses  = s.proses;
+  const total   = admin + bayar + layanan + premi + proses;
+  return { hj, admin, bayar, promoX, goX, layanan, premi, proses, total, net: hj - total };
+}
+
+function calcShp(modal, pct) {
+  const s = S().shp;
+  const target   = modal * (1 + pct / 100);
+  const xtra     = on('opt-xtra');
+  const go       = on('opt-go');
+  const asuransi = on('opt-asuransi');
+  const promoX   = xtra ? s.xtra : 0;  // flat
+  const goX      = go   ? s.go   : 0;  // flat
+  const premi    = asuransi ? s.premi : 0;
+
+  // Simple formula: layanan = promoX + goX (flat, both capped)
+  // Check if layanan would exceed 2%*HJ (rare for normal prices)
+  // HJ_flat: both flat, check against 2% cap
+  const hjFlat = Math.ceil((target + promoX + goX + s.proses) / (1 - s.admin - premi));
+  // If 2%*hjFlat < promoX+goX, then layanan is capped by 2%
+  const hjCap  = Math.ceil((target + bayar_flat + s.proses) / (1 - s.admin - s.layanan - premi));
+  const hj = (promoX + goX) <= hjFlat * s.layanan ? hjFlat : hjCap;
+  return calcShpFromHJ(hj);
+}
+
+// ── Render ────────────────────────────────────────────────
+function renderTok(t, mode) {
+  const hjLine = mode === 'modal'
+    ? `<div class="hj-box"><span class="hj-label">Harga jual rekomendasi</span><span class="hj-val tok">${rp(t.hj)}</span></div>` : '';
+  const cashbackRow = t.xbp
+    ? `<div class="detail-item"><span class="dk">Cashback Growth Xtra</span><span class="dv">${rp(t.cashback)}</span></div>` : '';
+  return `
+  <div class="platform-card">
+    <div class="pcard-header tok">Tokopedia / TikTok Shop${t.xbp ? ' · XBP' : ''}</div>
+    <div class="net-section">
+      <span class="net-label">Penghasilan bersih</span>
+      <span class="net-val tok">${rp(t.net)}</span>
+    </div>
+    <div class="detail-list">
+      <div class="detail-item"><span class="dk">Komisi platform</span><span class="dv">${rp(t.komisi)}</span></div>
+      <div class="detail-item"><span class="dk">Biaya layanan mall</span><span class="dv">${rp(t.mall)}</span></div>
+      <div class="detail-item"><span class="dk">Komisi dinamis</span><span class="dv">${rp(t.dinamis)}</span></div>
+      ${cashbackRow}
+      ${t.afl_on ? `<div class="detail-item"><span class="dk">Komisi afiliasi</span><span class="dv">${rp(t.afiliasi)}</span></div>` : ""}
+      <div class="detail-item"><span class="dk">Biaya proses pesanan</span><span class="dv">${rp(t.proses)}</span></div>
+      <div class="detail-item total"><span class="dk">Total biaya</span><span class="dv">${rp(t.total)}</span></div>
+    </div>
+    ${hjLine}
+  </div>`;
+}
+
+function renderShp(s, mode) {
+  const xtra     = on('opt-xtra');
+  const go       = on('opt-go');
+  const asuransi = on('opt-asuransi');
+  const subXtra  = xtra ? `<div class="detail-item sub"><span class="dk">└ Promo XTRA (flat)</span><span class="dv">${rp(s.promoX)}</span></div>` : '';
+  const subGo    = go   ? `<div class="detail-item sub"><span class="dk">└ GO XTRA (flat)</span><span class="dv">${rp(s.goX)}</span></div>` : '';
+  const premiRow = asuransi ? `<div class="detail-item"><span class="dk">Premi asuransi</span><span class="dv">${rp(s.premi)}</span></div>` : '';
+  const hjLine   = mode === 'modal'
+    ? `<div class="hj-box"><span class="hj-label">Harga jual rekomendasi</span><span class="hj-val shp">${rp(s.hj)}</span></div>` : '';
+  return `
+  <div class="platform-card">
+    <div class="pcard-header shp">Shopee</div>
+    <div class="net-section">
+      <span class="net-label">Penghasilan bersih</span>
+      <span class="net-val shp">${rp(s.net)}</span>
+    </div>
+    <div class="detail-list">
+      <div class="detail-item"><span class="dk">Biaya administrasi (4.2% incl. PPN)</span><span class="dv">${rp(s.admin)}</span></div>
+      <div class="detail-item"><span class="dk">Biaya pembayaran</span><span class="dv">${rp(s.bayar)}</span></div>
+      <div class="detail-item"><span class="dk">Biaya layanan</span><span class="dv">${rp(s.layanan)}</span></div>
+      ${subXtra}${subGo}
+      ${premiRow}
+      <div class="detail-item"><span class="dk">Biaya proses pesanan</span><span class="dv">${rp(s.proses)}</span></div>
+      <div class="detail-item total"><span class="dk">Total biaya</span><span class="dv">${rp(s.total)}</span></div>
+    </div>
+    ${hjLine}
+  </div>`;
+}
+
+function calc() {
+  const el = document.getElementById('results');
+  if (mode === 'modal') {
+    const modal = parseFloat(document.getElementById('modal').value);
+    const pct   = parseFloat(document.getElementById('target').value);
+    if (!modal || modal <= 0) {
+      el.innerHTML = '<div class="empty">Masukkan modal untuk melihat hasil</div>';
+      return;
+    }
+    el.innerHTML = renderTok(calcTok(modal, pct), 'modal') +
+                   renderShp(calcShp(modal, pct), 'modal');
+  } else {
+    const hj = parseFloat(document.getElementById('hj-input').value);
+    if (!hj || hj <= 0) {
+      el.innerHTML = '<div class="empty">Masukkan harga jual untuk melihat hasil</div>';
+      return;
+    }
+    el.innerHTML = renderTok(calcTokFromHJ(hj), 'jual') +
+                   renderShp(calcShpFromHJ(hj), 'jual');
   }
-
-  const total = sections.reduce((s, sec) => s + sec.rows.length, 0);
-  const xbpBadge = xbpOn
-    ? `<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--orange-dim);color:var(--orange);margin-left:8px;">XBP ON</span>`
-    : `<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--surface2);color:var(--text-dim);margin-left:8px;">XBP OFF</span>`;
-
-  let html = `<div class="card"><div class="result-header">
-    <div class="result-header-left">Harga PC: <strong>${fmt(modalPC)}</strong> &nbsp;|&nbsp; Varian: <strong>${total}</strong>${xbpBadge}</div>
-    <div class="result-header-right">
-      <button class="copy-all-btn" onclick="copyAllSku()">🏷️ Copy SKU</button>
-      <button class="copy-all-btn" onclick="copyAllPrice()">📋 Copy Harga</button>
-      <button class="copy-all-btn toped" onclick="copyAllToped()" style="color:var(--orange);border-color:var(--orange);">🛍️ Copy Tokped</button>
-    </div></div>`;
-
-  sections.forEach(sec => {
-    html += `<div class="bundle-section">
-      <div class="bundle-section-title">${sec.title}</div>
-      <div class="bundle-col-header">
-        <span class="col-name">Varian</span>
-        <span class="col-sku">SKU</span>
-        <span class="col-price">Harga Modal</span>
-        <span class="col-toped">Tokopedia</span>
-      </div>`;
-    sec.rows.forEach(row => {
-      html += `<div class="bundle-row" data-sku="${row.sku}" data-price="${Math.round(row.price)}" data-toped="${Math.round(row.toped)}">
-        <span class="bundle-name">${row.label}</span>
-        <div class="sku-cell"><span class="sku-val" onclick="copyVal('${row.sku}', this)">${row.sku}</span></div>
-        <div class="price-cell"><span class="price-val green" onclick="copyVal('${Math.round(row.price)}', this)">${fmt(row.price)}</span></div>
-        <div class="price-cell"><span class="price-val orange" onclick="copyVal('${Math.round(row.toped)}', this)">${fmt(row.toped)}</span></div>
-      </div>`;
-    });
-    html += `</div>`;
-  });
-  html += `</div>`;
-  document.getElementById('result-area').innerHTML = html;
 }
-
-function copyVal(val, el) {
-  navigator.clipboard.writeText(String(val)).then(() => {
-    const orig = el.textContent;
-    el.textContent = '✓';
-    setTimeout(() => el.textContent = orig, 800);
-    showToast('✅ Disalin: ' + val);
-  });
-}
-function copyAllSku() {
-  const rows = document.querySelectorAll('.bundle-row');
-  if (!rows.length) return;
-  navigator.clipboard.writeText(Array.from(rows).map(r => r.dataset.sku).join('\n')).then(() => showToast(`✅ ${rows.length} SKU disalin!`));
-}
-function copyAllPrice() {
-  const rows = document.querySelectorAll('.bundle-row');
-  if (!rows.length) return;
-  navigator.clipboard.writeText(Array.from(rows).map(r => r.dataset.price).join('\n')).then(() => showToast(`✅ ${rows.length} harga modal disalin!`));
-}
-function copyAllToped() {
-  const rows = document.querySelectorAll('.bundle-row');
-  if (!rows.length) return;
-  navigator.clipboard.writeText(Array.from(rows).map(r => r.dataset.toped).join('\n')).then(() => showToast(`✅ ${rows.length} harga Tokopedia disalin!`));
-}
-
-let toastTimer;
-function showToast(msg, isError = false) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.toggle('error', isError);
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
-}
-
-// ── CLOUD SYNC ──
-const GIST_FILENAME = 'minipc-calculator-settings.json';
-
-function onTokenInput() {
-  const tok = document.getElementById('gh-token').value.trim();
-  const has = tok.length > 0;
-  document.getElementById('btn-upload').disabled = !has;
-  document.getElementById('btn-download').disabled = !has;
-  if (has) localStorage.setItem('gh_token', tok);
-}
-
-function toggleTokenVis() {
-  const inp = document.getElementById('gh-token');
-  const btn = document.querySelector('.token-toggle');
-  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈 hide'; }
-  else { inp.type = 'password'; btn.textContent = '👁 show'; }
-}
-
-function getToken() { return document.getElementById('gh-token').value.trim(); }
-
-function getAllData() {
-  const parts = {}, toped = {};
-  PART_IDS.forEach(id => { parts[id] = getVal(id); });
-  TOPED_IDS.forEach(id => { toped[id] = getVal(id); });
-  return { parts, toped, savedAt: new Date().toISOString() };
-}
-
-function applyData(data) {
-  if (data.parts) PART_IDS.forEach(id => { const el = document.getElementById(id); if (el && data.parts[id] !== undefined) el.value = data.parts[id] || ''; });
-  if (data.toped) TOPED_IDS.forEach(id => { const el = document.getElementById(id); if (el && data.toped[id] !== undefined) el.value = data.toped[id]; });
-  localStorage.setItem('minipc_settings', JSON.stringify(data.parts || {}));
-  localStorage.setItem('minipc_toped', JSON.stringify(data.toped || {}));
-}
-
-async function findGist(token) {
-  const res = await fetch('https://api.github.com/gists', {
-    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
-  });
-  if (!res.ok) throw new Error('Token tidak valid atau tidak punya akses gist');
-  const gists = await res.json();
-  return gists.find(g => g.files && g.files[GIST_FILENAME]) || null;
-}
-
-async function cloudUpload() {
-  const token = getToken();
-  if (!token) return;
-  const btn = document.getElementById('btn-upload');
-  btn.disabled = true; btn.textContent = '⏳ Uploading...';
-  try {
-    const content = JSON.stringify(getAllData(), null, 2);
-    const existing = await findGist(token);
-    const url    = existing ? `https://api.github.com/gists/${existing.id}` : 'https://api.github.com/gists';
-    const method = existing ? 'PATCH' : 'POST';
-    const body   = existing
-      ? { files: { [GIST_FILENAME]: { content } } }
-      : { description: 'Mini PC Calculator Settings', public: false, files: { [GIST_FILENAME]: { content } } };
-    const res = await fetch(url, { method, headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    if (!res.ok) throw new Error('Gagal upload ke GitHub');
-    localStorage.setItem('gh_gist_exists', '1');
-    showToast('✅ Setting berhasil diupload ke cloud!');
-    updateCloudStatus();
-  } catch(e) { showToast('❌ ' + e.message, true); }
-  btn.disabled = false; btn.textContent = '⬆️ Upload ke Cloud';
-}
-
-async function cloudDownload() {
-  const token = getToken();
-  if (!token) return;
-  const btn = document.getElementById('btn-download');
-  btn.disabled = true; btn.textContent = '⏳ Downloading...';
-  try {
-    const gist = await findGist(token);
-    if (!gist) throw new Error('Belum ada data di cloud. Upload dulu dari device utama.');
-    const data = JSON.parse(gist.files[GIST_FILENAME].content);
-    applyData(data);
-    calcAll();
-    localStorage.setItem('gh_gist_exists', '1');
-    showToast('✅ Setting berhasil didownload dari cloud!');
-    updateCloudStatus();
-  } catch(e) { showToast('❌ ' + e.message, true); }
-  btn.disabled = false; btn.textContent = '⬇️ Download dari Cloud';
-}
-
-function updateCloudStatus() {
-  const tok    = document.getElementById('gh-token').value.trim();
-  const exists = localStorage.getItem('gh_gist_exists');
-  const el     = document.getElementById('cloud-status');
-  if (tok && exists) { el.className = 'cloud-status connected'; el.textContent = '🟢 Terhubung — data sudah pernah disync'; }
-  else if (tok)      { el.className = 'cloud-status disconnected'; el.textContent = '🟡 Token ada, belum pernah sync'; }
-  else               { el.className = 'cloud-status disconnected'; el.textContent = '⚪ Belum terhubung'; }
-  const has = tok.length > 0;
-  document.getElementById('btn-upload').disabled = !has;
-  document.getElementById('btn-download').disabled = !has;
-}
-
-loadSettings();
-onTokenInput();
 </script>
 </body>
 </html>
