@@ -223,7 +223,6 @@
     <div class="formula-note">
       <strong style="color:var(--text);">Formula HJ:</strong> <code>CEIL((Modal + flat) / (1 - total_rate))</code><br>
       — Komisi Dinamis = <code>MIN(4% × HJ, Rp650.000)</code><br>
-      — PPh 22 PKP = <code>0.5% × (HJ ÷ 1.11)</code> ≈ <code>0.4505% × HJ</code><br>
       — Hasil dibulatkan ke angka berakhiran <code>x.xx9.000</code>
     </div>
   </div>
@@ -324,11 +323,10 @@ function tokedPrice(modal) {
   const xbpPct     = xbpOn ? getVal('t-xbp') / 100 : 0;
   const prosesFlat = getVal('t-proses');
   const flatTotal  = mallFlat + prosesFlat;
-  const pphRate    = 0.005 / 1.11;
-  let hj = Math.ceil((modal + flatTotal) / (1 - komisiPct - dinamisPct - xbpPct - pphRate));
+  let hj = Math.ceil((modal + flatTotal) / (1 - komisiPct - dinamisPct - xbpPct));
   for (let i = 0; i < 10; i++) {
     const dinamis = Math.min(dinamisPct * hj, dinamisCap);
-    const rate    = komisiPct + (dinamis / hj) + xbpPct + pphRate;
+    const rate    = komisiPct + (dinamis / hj) + xbpPct;
     const newHj   = Math.ceil((modal + flatTotal) / (1 - rate));
     if (newHj === hj) break;
     hj = newHj;
